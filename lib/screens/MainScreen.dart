@@ -88,6 +88,7 @@ class _MainScreenState extends State<MainScreen> {
                           if (winner != 0) {
                             openDialog(winner);
                           }
+                          //TODO implement handler in case of draw
                           turn = !turn;
                           bgColor = Color.fromRGBO(
                             Random().nextInt(256),
