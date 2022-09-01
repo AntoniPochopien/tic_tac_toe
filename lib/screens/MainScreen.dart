@@ -7,11 +7,20 @@ import '../functions/checkIfWin.dart';
 import '../widgets/custom_dialog.dart';
 
 class MainScreen extends StatefulWidget {
+  int finalScore;
+  String p1Name;
+  String p2Name;
+
+  MainScreen(this.finalScore, this.p1Name, this.p2Name);
+
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
 
 class _MainScreenState extends State<MainScreen> {
+  bool isLastRound = false;
+  int ScoreP1 = 0;
+  int ScoreP2 = 0;
   List<int> fileds = [
     0,
     0,
@@ -31,6 +40,7 @@ class _MainScreenState extends State<MainScreen> {
     Random().nextInt(256),
     1,
   );
+
   @override
   Widget build(BuildContext context) {
     void refreshGame() {
@@ -47,14 +57,20 @@ class _MainScreenState extends State<MainScreen> {
       ];
     }
 
-    Future<void> openDialog(int winner) async {
+    Future<void> openDialog(
+      int winner,
+    ) async {
       return await showDialog(
           barrierDismissible: false,
           context: context,
           builder: (context) {
-            return CustomDialog("Gracz X");
+            return CustomDialog(
+                turn ? widget.p1Name : widget.p2Name, winner, isLastRound);
           }).then((value) {
         setState(() {
+          if (isLastRound) {
+            Navigator.of(context).pop();
+          }
           refreshGame();
         });
       });
@@ -67,14 +83,43 @@ class _MainScreenState extends State<MainScreen> {
         curve: Curves.fastOutSlowIn,
         child: Column(
           children: [
-            Expanded(flex: 1, child: Container()),
+            Expanded(
+                flex: 1,
+                child: Container(
+                  padding: EdgeInsets.symmetric(horizontal: 26),
+                  width: double.infinity,
+                  child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                            padding: EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.rectangle,
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Text(
+                              '${widget.p1Name} : $ScoreP1',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            )),
+                        Container(
+                            padding: EdgeInsets.all(15),
+                            decoration: BoxDecoration(
+                                shape: BoxShape.rectangle,
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(10)),
+                            child: Text(
+                              '$ScoreP2 : ${widget.p2Name}',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            )),
+                      ]),
+                )),
             Expanded(
               flex: 3,
               child: Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: GridView.builder(
                   itemCount: fileds.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 3),
                   itemBuilder: ((context, index) {
                     return GestureDetector(
@@ -85,10 +130,26 @@ class _MainScreenState extends State<MainScreen> {
                         setState(() {
                           fileds[index] = turn == false ? 1 : 2;
                           winner = checkIfWin(fileds, turn == false ? 1 : 2);
-                          if (winner != 0) {
+                          if (winner == 1 || winner == 2) {
+                            if (winner == 1) {
+                              ScoreP1 += 1;
+                            }
+                            if (winner == 2) {
+                              ScoreP2 += 1;
+                            }
+                            if (widget.finalScore == ScoreP1 ||
+                                widget.finalScore == ScoreP2) {
+                              isLastRound = true;
+                              ScoreP1 = 0;
+                              ScoreP2 = 0;
+                              openDialog(winner);
+                            } else {
+                              openDialog(winner);
+                            }
+                          }
+                          if (winner == 3) {
                             openDialog(winner);
                           }
-                          //TODO implement handler in case of draw
                           turn = !turn;
                           bgColor = Color.fromRGBO(
                             Random().nextInt(256),
@@ -103,12 +164,12 @@ class _MainScreenState extends State<MainScreen> {
                           border: determineBorder(index),
                         ),
                         child: fileds[index] == 1
-                            ? Center(
+                            ? const Center(
                                 child:
                                     Text('x', style: TextStyle(fontSize: 40)),
                               )
                             : fileds[index] == 2
-                                ? Center(
+                                ? const Center(
                                     child: Text(
                                       'o',
                                       style: TextStyle(fontSize: 40),
@@ -123,7 +184,14 @@ class _MainScreenState extends State<MainScreen> {
             ),
             Expanded(
               flex: 1,
-              child: Container(),
+              child: Container(
+                child: Center(
+                  child: Text(
+                    turn == false ? 'x' : 'o',
+                    style: TextStyle(fontSize: 40),
+                  ),
+                ),
+              ),
             )
           ],
         ),

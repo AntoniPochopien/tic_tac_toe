@@ -25,6 +25,9 @@ int checkIfWin(List<int> list, int player) {
   }
   if (list[2] == player && list[4] == player && list[6] == player) {
     return player;
+  }
+  if (!list.contains(0)) {
+    return 3;
   } else {
     return 0;
   }
